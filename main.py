@@ -1,9 +1,11 @@
 import asyncio
 import re
+import html
 from telegram import Update
+from telegram.constants import ParseMode
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
 
-TOKEN = "8648013365:AAFP-Ea_BbnBPTpe0L6-C08VsPvQHw6AYnI"
+TOKEN = "8648013365:AAHuM4sEmn-9fWmlQ8R5ditxh1iaV6GdY8s"
 SOURCE_CHANNEL_ID = -1003722624508
 DEST_CHANNEL_ID = -1003824270566
 
@@ -17,14 +19,15 @@ def remove_telefeed(text: str) -> str:
 def has_other_link_or_username(text: str) -> bool:
     if not text:
         return False
-    # Allow only t.me/tg_feedbot links (TeleFeed), block everything else
-    # First remove TeleFeed link from check
     cleaned = re.sub(r'https?://t\.me/tg_feedbot\S*', '', text, flags=re.IGNORECASE)
     if re.search(r'https?://', cleaned, re.IGNORECASE):
         return True
     if re.search(r'@\w+', cleaned):
         return True
     return False
+
+def bold_quote(text: str) -> str:
+    return f"<blockquote><b>{text}</b></blockquote>"
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.channel_post:
@@ -38,7 +41,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     raw_text = channel_post.text or channel_post.caption or ""
     text = remove_telefeed(raw_text)
 
-    # Block messages that still contain other links or @usernames
     if has_other_link_or_username(text):
         return
 
@@ -72,20 +74,23 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     market = market_part.replace('°', '').strip()
                 entry_time = time_part
 
+    m = html.escape(market)
+    et = html.escape(entry_time)
+
     if is_win:
-        new_text = (
+        new_text = bold_quote(
             "╔═══ 🟢 SIGNAL RESULT 🟢 ═══╗\n\n"
-            f"✅ 𝗪𝗜𝗡 ➤ {market}\n\n"
-            f"⏰ Entry Time ➤ {entry_time}\n\n"
+            f"✅ 𝗪𝗜𝗡 ➤ {m}\n\n"
+            f"⏰ Entry Time ➤ {et}\n\n"
             "📈 Perfect Signal • Clean Profit 🔥\n\n"
             "👑 Join Vip up to 99% signal profit ➜ @SHOPNO_XDN\n"
             "╚═━════════✦═══════━═╝"
         )
     elif is_loss:
-        new_text = (
+        new_text = bold_quote(
             "╔═══ 🔴 SIGNAL RESULT 🔴 ═══╗\n\n"
-            f"❌ 𝗟𝗢𝗦𝗦 ➤ {market}\n\n"
-            f"⏰ Entry Time ➤ {entry_time}\n\n"
+            f"❌ 𝗟𝗢𝗦𝗦 ➤ {m}\n\n"
+            f"⏰ Entry Time ➤ {et}\n\n"
             "♻️ Recovery On Process ⚡\n\n"
             "📊 Next Signal Coming Soon\n"
             "╚═━═══════✦════════━═╝"
@@ -95,13 +100,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if 'CALL' in direction or '🟢' in direction:
             dir_label = "🟢 CALL ⬆️ UP"
 
-        new_text = (
+        new_text = bold_quote(
             "☂𝗦𝗢𝗣𝗡𝗢 𝗧𝗥𝗔𝗗𝗘𝗥•LIVE SIGNAL ☂\n\n"
             "💱 ╭─〔 𝗠𝗔𝗥𝗞𝗘𝗧 𝗣𝗔𝗜𝗥 〕─╮\n"
-            f"     ➤  → 『 {market} 』\n"
+            f"     ➤  → 『 {m} 』\n"
             "      ╰────────────────✦\n\n"
             "⏰ ╭─〔 𝗘𝗡𝗧𝗥𝗬 𝗧𝗜𝗠𝗘 〕─╮\n"
-            f"    ➤   ⌚  →  {entry_time}\n"
+            f"    ➤   ⌚  →  {et}\n"
             "      ╰───────◈──────╯\n\n"
             "⏳ ╭─〔 𝗧𝗥𝗔𝗗𝗘 𝗘𝗫𝗣𝗜𝗥𝗬 〕─╮\n"
             "        ➤ → 1 Minutes\n"
@@ -116,8 +121,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "╚═━═══════─═══════ ═━═╝"
         )
     else:
-        new_text = (
-            f"{text}\n\n"
+        new_text = bold_quote(
+            f"{html.escape(text)}\n\n"
             "👑 Join Vip group ➜ @SHOPNO_XDN\n"
             "╚═━════════─════════━═╝"
         )
@@ -127,12 +132,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await context.bot.send_photo(
                 chat_id=DEST_CHANNEL_ID,
                 photo=channel_post.photo[-1].file_id,
-                caption=new_text
+                caption=new_text,
+                parse_mode=ParseMode.HTML
             )
         else:
             await context.bot.send_message(
                 chat_id=DEST_CHANNEL_ID,
-                text=new_text
+                text=new_text,
+                parse_mode=ParseMode.HTML
             )
     except Exception as e:
         print(f"Error sending message: {e}")
