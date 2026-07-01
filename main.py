@@ -5,7 +5,7 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
 
-TOKEN = "8648013365:AAHuM4sEmn-9fWmlQ8R5ditxh1iaV6GdY8s"
+TOKEN = "8648013365:AAHeCpJQYJ3z7VS7FfI8Jf7yptbcjbWl2pA"
 SOURCE_CHANNEL_ID = -1003722624508
 DEST_CHANNEL_ID = -1003824270566
 
